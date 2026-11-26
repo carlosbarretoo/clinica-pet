@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clínica Pet</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-papel="">
+  <header class="topo">
+    <h1>🐾 Clínica Pet</h1>
+    <nav class="so-logado">
+      <button class="aba ativa" data-aba="pets"><span class="so-cliente">Meus pets</span><span class="so-vet">Pets</span></button>
+      <button class="aba" data-aba="atendimentos">Atendimentos</button>
+      <button class="aba so-vet" data-aba="tutores">Tutores</button>
+    </nav>
+    <div class="usuario so-logado">
+      <span id="quem"></span>
+      <button id="sair" class="pequeno aba">Sair</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ LOGIN / CADASTRO ============ -->
+    <section id="tela-auth" class="auth" hidden>
+      <div class="auth-cartao">
+        <div class="auth-abas">
+          <button class="auth-aba ativa" data-auth="login">Entrar</button>
+          <button class="auth-aba" data-auth="registro">Criar conta</button>
+        </div>
+
+        <form id="form-login" novalidate>
+          <label>E-mail <input name="email" type="email" autocomplete="username" required></label>
+          <label>Senha <input name="senha" type="password" autocomplete="current-password" required></label>
+          <p class="erro-geral" hidden></p>
+          <button class="primario">Entrar</button>
+        </form>
+
+        <form id="form-registro" novalidate hidden>
+          <fieldset class="escolha">
+            <legend>Tipo de conta</legend>
+            <label class="opcao"><input type="radio" name="papel" value="cliente" checked> Sou tutor de um pet</label>
+            <label class="opcao"><input type="radio" name="papel" value="veterinario"> Sou da clínica (veterinário)</label>
+          </fieldset>
+          <label>Nome* <input name="nome" maxlength="100" autocomplete="name" required></label>
+          <label class="reg-cliente">Telefone* <input name="telefone" maxlength="20" placeholder="(11) 99999-9999"></label>
+          <label>E-mail* <input name="email" type="email" maxlength="120" autocomplete="email" required></label>
+          <label>Senha* <input name="senha" type="password" minlength="6" autocomplete="new-password" required>
+            <span class="dica">Mínimo de 6 caracteres.</span></label>
+          <label class="reg-vet" hidden>Código da clínica* <input name="codigo_clinica" autocomplete="off">
+            <span class="dica">Fornecido pela administração da clínica.</span></label>
+          <p class="erro-geral" hidden></p>
+          <button class="primario">Criar conta</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ PETS ============ -->
+    <section id="aba-pets" class="so-logado">
+      <div id="resumo" class="resumo so-vet"></div>
+
+      <div class="barra">
+        <input id="busca" type="search" placeholder="Buscar por nome ou raça…">
+        <select id="filtro-especie"><option value="">Todas as espécies</option></select>
+        <select id="filtro-tutor" class="so-vet"><option value="">Todos os tutores</option></select>
+        <button id="novo-pet" class="primario">+ Novo pet</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Pet</th><th>Espécie</th><th>Raça</th><th>Nascimento</th><th>Idade</th><th>Peso</th><th class="so-vet">Tutor</th><th></th></tr>
+        </thead>
+        <tbody id="lista-pets"></tbody>
+      </table>
+      <p id="vazio-pets" class="vazio" hidden>Nenhum pet encontrado.</p>
+    </section>
+
+    <!-- ============ ATENDIMENTOS ============ -->
+    <section id="aba-atendimentos" class="so-logado" hidden>
+      <div class="barra">
+        <select id="filtro-status">
+          <option value="">Todos</option>
+          <option value="aguardando" selected>Aguardando</option>
+          <option value="concluido">Concluídos</option>
+        </select>
+        <span class="espaco"></span>
+        <button id="novo-atendimento" class="primario so-cliente">+ Pedir atendimento</button>
+      </div>
+      <div id="lista-atendimentos" class="lista-atend"></div>
+      <p id="vazio-atendimentos" class="vazio" hidden>Nenhum atendimento aqui.</p>
+    </section>
+
+    <!-- ============ TUTORES (só clínica) ============ -->
+    <section id="aba-tutores" class="so-logado so-vet" hidden>
+      <div class="barra">
+        <button id="novo-tutor" class="primario">+ Novo tutor</button>
+      </div>
+      <table>
+        <thead><tr><th>Nome</th><th>Telefone</th><th>E-mail</th><th>Pets</th><th></th></tr></thead>
+        <tbody id="lista-tutores"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Formulário de pet -->
+  <dialog id="dlg-pet">
+    <form id="form-pet" novalidate>
+      <h2 id="titulo-pet">Novo pet</h2>
+      <label>Nome* <input name="nome" maxlength="60" required></label>
+      <label>Espécie* <select name="especie" required></select></label>
+      <label class="campo-raca">Raça
+        <span class="auto">
+          <input name="raca" maxlength="60" autocomplete="off" placeholder="Comece a digitar…"
+            role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugestoes-raca">
+          <ul id="sugestoes-raca" class="sugestoes" role="listbox" hidden></ul>
+        </span>
+      </label>
+      <label class="opcao nao-sei"><input type="checkbox" id="raca-nao-sei"> Não sei a raça</label>
+      <div class="dupla">
+        <label>Mês de nascimento
+          <select name="mes_nascimento">
+            <option value="">Mês…</option>
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </label>
+        <label>Ano de nascimento <input name="ano_nascimento" type="number" min="1900" step="1" placeholder="Ex.: 2021"></label>
+      </div>
+      <label>Peso (kg) <input name="peso_kg" type="number" step="0.01" min="0.01" max="999.99"></label>
+      <label class="so-vet">Tutor*
+        <span class="linha">
+          <select name="tutor_id"></select>
+          <button type="button" id="tutor-rapido" title="Cadastrar tutor novo">+ tutor</button>
+        </span>
+      </label>
+      <fieldset id="motivo-pet" class="motivo">
+        <legend>Motivo da visita<span class="so-cliente">*</span><span class="so-vet"> (opcional)</span></legend>
+        <label>O que o pet precisa?
+          <select name="tipo">
+            <option value="">Selecione…</option>
+            <option value="consulta">Consulta: ele está com sintomas</option>
+            <option value="vacina">Apenas vacinação</option>
+          </select>
+        </label>
+        <label class="campo-sintomas">Sintomas <textarea name="sintomas" rows="3" maxlength="1000"
+          placeholder="Ex.: está sem comer há 2 dias, vomitou ontem…"></textarea></label>
+      </fieldset>
+      <p class="erro-geral" hidden></p>
+      <div class="acoes">
+        <button type="button" data-fechar>Cancelar</button>
+        <button class="primario">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Pedido de atendimento -->
+  <dialog id="dlg-atendimento">
+    <form id="form-atendimento" novalidate>
+      <h2>Pedir atendimento</h2>
+      <label>Pet* <select name="pet_id"></select></label>
+      <label>O que o pet precisa?*
+        <select name="tipo">
+          <option value="">Selecione…</option>
+          <option value="consulta">Consulta: ele está com sintomas</option>
+          <option value="vacina">Apenas vacinação</option>
+        </select>
+      </label>
+      <label class="campo-sintomas">Sintomas <textarea name="sintomas" rows="4" maxlength="1000"
+        placeholder="Ex.: está sem comer há 2 dias, vomitou ontem…"></textarea></label>
+      <p class="erro-geral" hidden></p>
+      <div class="acoes">
+        <button type="button" data-fechar>Cancelar</button>
+        <button class="primario">Enviar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Registro do veterinário sobre o atendimento -->
+  <dialog id="dlg-concluir">
+    <form id="form-concluir" novalidate>
+      <h2 id="titulo-concluir">Atendimento</h2>
+      <p id="resumo-concluir" class="sub"></p>
+      <label>Situação
+        <select name="status">
+          <option value="aguardando">Aguardando</option>
+          <option value="concluido">Concluído</option>
+        </select>
+      </label>
+      <label>Observações do veterinário <textarea name="observacoes" rows="4" maxlength="2000"></textarea></label>
+      <p class="erro-geral" hidden></p>
+      <div class="acoes">
+        <button type="button" data-fechar>Cancelar</button>
+        <button class="primario">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Formulário de tutor -->
+  <dialog id="dlg-tutor">
+    <form id="form-tutor" novalidate>
+      <h2 id="titulo-tutor">Novo tutor</h2>
+      <label>Nome* <input name="nome" maxlength="100" required></label>
+      <label>Telefone* <input name="telefone" maxlength="20" required placeholder="(11) 99999-9999"></label>
+      <label>E-mail <input name="email" type="email" maxlength="120"></label>
+      <p class="erro-geral" hidden></p>
+      <div class="acoes">
+        <button type="button" data-fechar>Cancelar</button>
+        <button class="primario">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="aviso" class="aviso" hidden></div>
+
+  <script src="racas.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
